@@ -124,6 +124,11 @@ function VideoTaggingTrackingExtension( options = {} ) {
                         var x1, x2, x3, x4;
                         if (resized)
                         {
+							//
+							// Warning: This can "drift" by a single pixel in either direction for
+							// each of these variables. Probably best not to resize the window when
+							// annotating regions if consistency is important.
+							//
                             x1 = Math.round(region.x * self.stanW);
                             y1 = Math.round(region.y * self.stanH);
                             x2 = x1 + Math.round(region.w * self.stanW);
