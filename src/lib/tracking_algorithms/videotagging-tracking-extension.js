@@ -80,6 +80,12 @@ function VideoTaggingTrackingExtension( options = {} ) {
                 var curFrame = self.videotagging.getCurrentFrame(),
                     stanW = self.videotagging.video.offsetWidth/self.videotagging.video.videoWidth,
                     stanH = self.videotagging.video.offsetHeight/self.videotagging.video.videoHeight;
+                if (self.stanW !== stanW || self.stanH !== stanH)    
+                {
+                    resized = true;
+                    self.stanW = stanW;
+                    self.stanH = stanH;
+                }
                 
                 if (self.method === "track"){
                     // pass regions to track 
@@ -113,17 +119,29 @@ function VideoTaggingTrackingExtension( options = {} ) {
                         });
 
                 }
-                else if (self.method == "copy"){
+                else if (self.method === "copy"){
                     regionsToTrack.forEach((region) => {
-                        var x1, y1, x2, y2;
-                            x1 = region.x * stanW;
-                            y1 = region.y * stanH;
-                            x2 = x1 + region.w * stanW;
-                            y2 = y1 + region.h * stanH;
+                        var x1, x2, x3, x4;
+                        if (resized)
+                        {
+                            x1 = Math.round(region.x * self.stanW);
+                            y1 = Math.round(region.y * self.stanH);
+                            x2 = x1 + Math.round(region.w * self.stanW);
+                            y2 = y1 + Math.round(region.h * self.stanH);
+                        }
+                        else    
+                        {
+                            x1 = region.originalRegion.x1;
+                            y1 = region.originalRegion.y1;
+                            x2 = region.originalRegion.x2;
+                            y2 = region.originalRegion.y2;
+                        }
+
                         // create new region
                         self.videotagging.createRegion(x1, y1, x2, y2);
                         self.videotagging.frames[curFrame][self.videotagging.frames[curFrame].length-1].tags = region.originalRegion.tags;
                         self.videotagging.frames[curFrame][self.videotagging.frames[curFrame].length-1].suggestedBy = {frameId:curFrame-1, regionId:region.originalRegion.id};        
+
                         // add suggested by to previous region to blacklist
                         self.videotagging.frames[curFrame-1][region.originalRegion.name-1].blockSuggest = true;
                     });   
@@ -132,7 +150,7 @@ function VideoTaggingTrackingExtension( options = {} ) {
                 }
             } else {
                 self.videotagging.canMove =true;
-            }        
+            }
         }     
 
         function track(regions) {
